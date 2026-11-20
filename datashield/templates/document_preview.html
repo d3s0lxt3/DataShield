@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block title %}{{ document.title }} — DataShield{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="eyebrow">Предпросмотр документа</span><h1>{{ document.title }}</h1><p>Сформировано из профиль компании. Скачанный DOCX можно редактировать.</p></div><div class="page-actions"><a class="button button-secondary" href="{{ url_for('main.documents') }}">Все документы</a><button class="button button-secondary" type="button" data-print>Печать</button><a class="button button-primary" href="{{ url_for('main.document_download', key=key) }}">{{ icon('download', 17) }} DOCX</a></div></header>
+<article class="document-sheet">
+  <h1>{{ document.title }}</h1><p class="document-subtitle">{{ document.subtitle }}</p>
+  {% for block in document.blocks %}
+    {% if block.type == 'h' %}<h2>{{ block.text }}</h2>
+    {% elif block.type == 'list' %}<ul>{% for item in block['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% else %}<p>{{ block.text }}</p>{% endif %}
+  {% endfor %}
+</article>
+<div class="document-sheet-footer"><a class="button button-secondary" href="{{ url_for('main.assessment') }}#company">Изменить данные</a><a class="button button-primary" href="{{ url_for('main.document_download', key=key) }}">{{ icon('download', 16) }} Скачать DOCX</a></div>
+{% endblock %}

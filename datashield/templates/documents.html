@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block title %}Документы — DataShield{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="eyebrow">Пакет документов</span><h1>Документы из ваших данных</h1><p>Просмотрите содержание, скачайте редактируемый DOCX и адаптируйте проект к фактическим процессам компании.</p></div><div class="page-actions"><a class="button button-primary" href="{{ url_for('main.documents_package') }}">{{ icon('download', 17) }} Скачать пакет ZIP</a></div></header>
+<div class="document-notice">{{ icon('info', 22) }}<p><strong>Перед использованием проверьте реквизиты и процессы</strong>{% if company.name %}Текущий профиль: {{ company.name }}.{% else %}Профиль компании пока не заполнен — в документах будет отмечено «Не указано».{% endif %} Шаблоны не являются подтверждением юридического соответствия. <a class="legal-link" href="{{ url_for('main.assessment') }}#company">Открыть профиль</a></p></div>
+<div class="document-grid">
+{% for document in documents %}
+  <article class="document-card">
+    <div class="document-card-top"><span class="document-icon">{{ icon('document', 22) }}</span><span class="law-tag">{{ document.regime }}</span></div>
+    <h2>{{ document.title }}</h2><p>{{ document.description }}</p>
+    <div class="document-meta"><span>DOCX</span><span>•</span><span>Редактируемый проект</span></div>
+    <div class="document-actions"><a class="button button-secondary button-small" href="{{ url_for('main.document_preview', key=document.key) }}">Просмотр</a><a class="button button-primary button-small" href="{{ url_for('main.document_download', key=document.key) }}">{{ icon('download', 15) }} Скачать DOCX</a></div>
+  </article>
+{% endfor %}
+  <article class="document-card">
+    <div class="document-card-top"><span class="document-icon">{{ icon('shield', 22) }}</span><span class="law-tag">Контроль</span></div>
+    <h2>Что проверить после скачивания</h2><p>Цели и категории обработки, список получателей, сроки хранения, ответственных и реальные каналы обращений субъектов.</p>
+    <div class="document-meta"><span>Адаптация к компании</span></div>
+    <div class="document-actions"><a class="button button-secondary button-small" href="{{ url_for('main.methodology') }}">Открыть методику {{ icon('arrow', 15) }}</a></div>
+  </article>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon, status_badge with context %}
+{% block title %}Анкета и чек-лист — DataShield{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div><span class="eyebrow">Самооценка</span><h1>Анкета и чек-лист</h1><p>Ответьте о фактических процессах — перечень требований и пакет документов будут использовать эти сведения.</p></div>
+  <div class="page-actions"><a class="button button-secondary" href="{{ url_for('main.documents') }}">{{ icon('document', 17) }} Документы</a></div>
+</header>
+<nav class="section-tabs" aria-label="Разделы страницы"><a href="#company">1. Компания</a><a href="#scope">2. Обработка данных</a><a href="#measures">3. Текущие меры</a><a href="#requirements">4. План соответствия <span>({{ requirements|length }})</span></a></nav>
+
+<section class="form-section" id="company">
+  <div class="form-section-heading"><span class="section-number">01</span><div><h2>Профиль компании</h2><p>Эти данные подставляются в генерируемые документы. Не указывайте здесь персональные данные клиентов.</p></div></div>
+  <form method="post" action="{{ url_for('main.save_company') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="form-grid three">
+      <div class="field"><label for="name">Название организации / ИП</label><input id="name" name="name" value="{{ company.name }}" placeholder="ООО «Пример»" maxlength="300"></div>
+      <div class="field"><label for="legal_form">Организационно-правовая форма</label><input id="legal_form" name="legal_form" value="{{ company.legal_form }}" placeholder="ООО" maxlength="100"></div>
+      <div class="field"><label for="director">Руководитель <span class="optional">(для приказа)</span></label><input id="director" name="director" value="{{ company.director }}" placeholder="Фамилия И. О." maxlength="300"></div>
+      <div class="field"><label for="inn">ИНН</label><input id="inn" name="inn" value="{{ company.inn }}" inputmode="numeric" pattern="[0-9]{10,12}" placeholder="10 или 12 цифр" maxlength="12"></div>
+      <div class="field"><label for="ogrn">ОГРН / ОГРНИП <span class="optional">(необязательно)</span></label><input id="ogrn" name="ogrn" value="{{ company.ogrn }}" inputmode="numeric" placeholder="13 или 15 цифр" maxlength="15"></div>
+      <div class="field"><label for="responsible">Ответственный за обработку ПДн</label><input id="responsible" name="responsible" value="{{ company.responsible }}" placeholder="Должность, Фамилия И. О." maxlength="300"></div>
+      <div class="field field-full"><label for="address">Юридический адрес</label><input id="address" name="address" value="{{ company.address }}" placeholder="Регион, город, улица, дом" maxlength="500"></div>
+      <div class="field"><label for="website">Сайт</label><input id="website" name="website" type="url" value="{{ company.website }}" placeholder="https://example.ru" maxlength="300"></div>
+      <div class="field"><label for="email">Email для обращений субъектов</label><input id="email" name="email" type="email" value="{{ company.email }}" placeholder="privacy@example.ru" maxlength="300"></div>
+      <div class="field"><label for="phone">Телефон <span class="optional">(необязательно)</span></label><input id="phone" name="phone" type="tel" value="{{ company.phone }}" placeholder="+7 000 000-00-00" maxlength="50"></div>
+      <div class="field field-full"><label for="processing_purposes">Цели обработки персональных данных</label><textarea id="processing_purposes" name="processing_purposes" placeholder="Заключение и исполнение договоров, кадровый учёт, ответы на обращения">{{ company.processing_purposes }}</textarea></div>
+      <div class="field field-full"><label for="data_categories">Категории данных и субъектов</label><textarea id="data_categories" name="data_categories" placeholder="Клиенты: ФИО, телефон, email; сотрудники: данные трудового договора">{{ company.data_categories }}</textarea></div>
+      <div class="field field-full"><label for="processors_list">Обработчики и поставщики сервисов</label><textarea id="processors_list" name="processors_list" placeholder="Хостинг-провайдер, сервис рассылок, бухгалтерская система">{{ company.processors_list }}</textarea></div>
+      <div class="field field-full"><label for="storage_period">Сроки хранения и порядок удаления</label><textarea id="storage_period" name="storage_period" placeholder="Сроки по категориям документов; удаление после достижения целей, если иное не требуется законом">{{ company.storage_period }}</textarea></div>
+    </div>
+    <div class="form-actions"><span class="form-note">Поля можно дополнять по мере изучения процессов.</span><button class="button button-primary" type="submit">Сохранить профиль</button></div>
+  </form>
+</section>
+
+<form method="post" action="{{ url_for('main.assessment') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  {% for group, title, number, description in [
+    ('scope', 'Как вы обрабатываете данные', '02', 'Ответы определяют применимость требований. Выбирайте «Не знаю», если процесс ещё нужно проверить.'),
+    ('measures', 'Какие меры уже внедрены', '03', 'Отмечайте «Да» только при наличии фактически действующей меры, а не просто намерения.')
+  ] %}
+  <section class="form-section" id="{{ group }}">
+    <div class="form-section-heading"><span class="section-number">{{ number }}</span><div><h2>{{ title }}</h2><p>{{ description }}</p></div></div>
+    <div class="question-list">
+      {% for question in groups[group] %}
+      <div class="question">
+        <div class="question-text"><strong>{{ question.label }}</strong><small>{{ question.help }}</small></div>
+        <div class="segmented" role="radiogroup" aria-label="{{ question.label }}">
+          {% for value, label in [(1, 'Да'), (0, 'Нет'), (2, 'Не знаю')] %}
+          <label><input type="radio" name="answer-{{ question.key }}" value="{{ value }}" {{ 'checked' if answers.get(question.key, 2) == value }}><span>{{ label }}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <div class="save-dock"><span>Ответы сохраняются в локальной базе и обновляют план соответствия.</span><button class="button button-primary" type="submit">Сохранить и рассчитать требования {{ icon('arrow', 17) }}</button></div>
+</form>
+
+<section class="form-section" id="requirements">
+  <div class="form-section-heading"><span class="section-number">04</span><div><h2>План соответствия</h2><p>Применимые требования по текущим ответам. В карточке можно назначить срок и сохранить пояснение или ссылку на подтверждение.</p></div></div>
+  {% if requirements %}
+  <div class="requirements-summary"><span><strong>{{ requirements|selectattr('status', 'equalto', 'done')|list|length }}</strong> выполнено</span><span><strong>{{ requirements|selectattr('status', 'equalto', 'in_progress')|list|length }}</strong> в работе</span><span><strong>{{ requirements|rejectattr('status', 'equalto', 'done')|list|length }}</strong> требуют внимания</span></div>
+  <div class="requirement-list">
+  {% for item in requirements %}
+    <article class="requirement-card {{ 'status-done-card' if item.status == 'done' }}" id="requirement-{{ item.key }}">
+      <div class="requirement-main">
+        <span class="requirement-check">{{ icon('check' if item.status == 'done' else 'clock', 16) }}</span>
+        <div class="requirement-content">
+          <div class="requirement-topline"><span class="law-tag">{{ item.regime }}{% if item.eu_uncertain %} · уточнить применимость GDPR{% endif %}</span><span class="priority priority-{{ item.priority }}">{{ 'Высокий' if item.priority == 'high' else 'Средний' if item.priority == 'medium' else 'Базовый' }}</span></div>
+          <h3>{{ item.title }}</h3><p>{{ item.description }}</p>
+          <a class="legal-link" href="{{ item.legal_url }}" target="_blank" rel="noopener noreferrer">{{ item.law }} {{ icon('external', 12) }}</a>
+          <details class="requirement-details"><summary>Действие, срок и подтверждение</summary><div class="requirement-action"><strong>Что сделать:</strong> {{ item.action }}</div>
+            <form class="requirement-edit" method="post" action="{{ url_for('main.update_requirement', key=item.key) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="next" value="{{ url_for('main.assessment') }}#requirement-{{ item.key }}">
+              <div class="field"><label for="status-{{ item.key }}">Статус</label><select id="status-{{ item.key }}" name="status">{% for value, label in status_labels.items() %}<option value="{{ value }}" {{ 'selected' if item.status == value }}>{{ label }}</option>{% endfor %}</select></div>
+              <div class="field"><label for="due-{{ item.key }}">Срок</label><input id="due-{{ item.key }}" type="date" name="due_date" value="{{ item.due_date }}"></div>
+              <div class="field"><label for="note-{{ item.key }}">Пояснение / подтверждение</label><input id="note-{{ item.key }}" name="note" value="{{ item.note }}" placeholder="Название документа, владелец"></div>
+              <button class="button button-secondary" type="submit">Сохранить</button>
+            </form>
+          </details>
+        </div>
+        {{ status_badge(item.status) }}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">{{ icon('checklist', 34) }}<h3>Требования ещё не определены</h3><p>Заполните раздел «Как вы обрабатываете данные» и сохраните анкету. Если персональные данные не обрабатываются, базовый чек-лист не применяется.</p><a class="button button-primary" href="#scope">Перейти к анкете</a></div>
+  {% endif %}
+</section>
+{% endblock %}

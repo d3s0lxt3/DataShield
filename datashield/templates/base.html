@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DataShield — самооценка 152-ФЗ и GDPR, документы и журнал инцидентов для малого бизнеса.">
+  <title>{% block title %}DataShield{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Перейти к содержимому</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Основная навигация">
+      <div class="brand-wrap">
+        <a class="brand" href="{{ url_for('main.dashboard') }}" aria-label="DataShield — главная">
+          <span class="brand-mark"><span>D</span><i></i></span>
+          <span><strong>DataShield</strong><small>данные в порядке</small></span>
+        </a>
+        <button class="icon-button sidebar-close" type="button" data-menu-close aria-label="Закрыть меню">{% from 'macros.html' import icon %}{{ icon('close') }}</button>
+      </div>
+      {% from 'macros.html' import icon %}
+      <nav class="main-nav">
+        <span class="nav-caption">Рабочее пространство</span>
+        <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">{{ icon('dashboard') }}<span>Обзор</span></a>
+        <a href="{{ url_for('main.assessment') }}" class="{{ 'active' if request.endpoint in ['main.assessment', 'main.save_company', 'main.update_requirement'] }}">{{ icon('checklist') }}<span>Анкета и чек-лист</span></a>
+        <a href="{{ url_for('main.documents') }}" class="{{ 'active' if request.endpoint in ['main.documents', 'main.document_preview'] }}">{{ icon('document') }}<span>Документы</span></a>
+        <a href="{{ url_for('main.incidents') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('main.incident') }}">{{ icon('incident') }}<span>Инциденты</span></a>
+        <a href="{{ url_for('main.methodology') }}" class="{{ 'active' if request.endpoint == 'main.methodology' }}">{{ icon('info') }}<span>Методика и нормы</span></a>
+      </nav>
+      <div class="sidebar-note">
+        {{ icon('shield', 24) }}
+        <strong>Локальное хранение</strong>
+        <p>Анкета и журнал остаются в SQLite на этом устройстве.</p>
+      </div>
+      <div class="sidebar-foot">DataShield <span>•</span> MVP 1.0</div>
+    </aside>
+    <div class="sidebar-backdrop" data-menu-close></div>
+    <main class="main" id="content">
+      <header class="topbar">
+        <button class="icon-button menu-button" type="button" data-menu-open aria-label="Открыть меню">{{ icon('menu') }}</button>
+        <span class="workspace-label"><span class="live-dot"></span> Рабочее пространство</span>
+        <span class="local-badge">{{ icon('shield', 16) }} Локальная база</span>
+      </header>
+      <div class="flash-stack" aria-live="polite">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+          <div class="flash flash-{{ category }}">{{ icon('check' if category == 'success' else 'info') }}<span>{{ message }}</span><button type="button" data-dismiss aria-label="Закрыть уведомление">×</button></div>
+        {% endfor %}
+      </div>
+      <div class="page-content">
+        {% block content %}{% endblock %}
+      </div>
+      <footer class="app-footer">Сервис поддерживает самооценку и не заменяет юридическое заключение по фактическим процессам компании.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block title %}Новый инцидент — DataShield{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="eyebrow">Журнал инцидентов</span><h1>Зарегистрировать инцидент</h1><p>Зафиксируйте известные факты. Не вносите в описание содержимое скомпрометированных персональных данных.</p></div></header>
+<div class="notice-box">{{ icon('clock', 20) }}<span>При применимости уведомления расчёт сроков начинается с момента обнаружения. Окончательное решение об уведомлении принимается по нормам закона и оценке риска.</span></div>
+<section class="form-section"><form method="post" action="{{ url_for('main.incident_new') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">{% include '_incident_fields.html' %}<div class="form-actions"><a class="button button-secondary" href="{{ url_for('main.incidents') }}">Отмена</a><button class="button button-primary" type="submit">Зарегистрировать {{ icon('arrow', 17) }}</button></div></form></section>
+{% endblock %}

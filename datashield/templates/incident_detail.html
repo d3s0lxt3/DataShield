@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block title %}{{ incident.title }} — DataShield{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="eyebrow">Инцидент #{{ incident.id }}</span><h1>{{ incident.title }}</h1><p>{{ category_labels[incident.category] }} · обнаружен {{ incident.detected_at|date_ru }}</p></div><div class="page-actions"><a class="button button-secondary" href="{{ url_for('main.incidents') }}">К журналу</a><a class="button button-secondary" href="#edit">{{ icon('document', 17) }} Редактировать</a></div></header>
+<div class="notice-box">{{ icon('info', 20) }}<span>Сроки ниже — расчётные ориентиры при подлежащем уведомлению инциденте. Подтвердите основание уведомления для этого события. По GDPR укажите момент осведомлённости контролёра. При высоком риске проверьте информирование субъектов по ст. 34.</span></div>
+<section class="deadline-grid">
+{% for deadline in deadlines %}<article class="deadline-card {{ 'overdue' if deadline.overdue else 'urgent' if deadline.urgent }}"><span>{{ deadline.law }}</span><h3>{{ deadline.title }}</h3><strong>{{ deadline.date|date_ru }}</strong><small>Расчётный крайний срок</small><div class="deadline-state">{% if deadline.notified %}Факт отправки: {{ deadline.notified|date_ru }}{% elif deadline.overdue %}Срок истёк — требуется проверка{% elif deadline.urgent %}Менее 12 часов{% else %}Уведомление не отмечено{% endif %}</div></article>{% else %}<p>Контрольные сроки появятся при подтверждении обязанности по конкретному инциденту.</p>{% endfor %}
+</section>
+<div class="incident-layout">
+  <section class="form-section" id="edit"><div class="form-section-heading"><span class="section-number">{{ icon('document', 16) }}</span><div><h2>Карточка и хронология</h2><p>Обновляйте статус и фактическое время уведомлений по мере реагирования.</p></div></div>
+    <form method="post" action="{{ url_for('main.incident_update', incident_id=incident.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">{% include '_incident_fields.html' %}<div class="form-actions"><span class="form-note">Последнее изменение: {{ incident.updated_at|date_ru }}</span><button class="button button-primary" type="submit">Сохранить изменения</button></div></form>
+  </section>
+  <aside class="incident-meta">
+    <section class="meta-card"><h2>Текущая оценка</h2><span class="risk risk-{{ incident.risk }}">{{ risk_labels[incident.risk] }} риск</span><div class="meta-row"><span>Статус</span><strong>{{ incident_status_labels[incident.status] }}</strong></div><div class="meta-row"><span>Затронуто субъектов</span><strong>{{ incident.subjects_count }}</strong></div><div class="meta-row"><span>Специальные категории</span><strong>{{ 'Да' if incident.special_data else 'Нет / не указано' }}</strong></div><div class="meta-row"><span>Контекст GDPR</span><strong>{{ 'Указан в анкете' if eu_applicable else 'Не указан в анкете' }}</strong></div></section>
+    <section class="meta-card"><h2>Проверка реагирования</h2><div class="meta-row"><strong>1. Ограничить распространение</strong><span>Изолировать системы и сохранить доказательства.</span></div><div class="meta-row"><strong>2. Оценить последствия</strong><span>Данные, субъекты, вероятность и тяжесть риска.</span></div><div class="meta-row"><strong>3. Проверить уведомления</strong><span>Надзорный орган и субъекты при высоком риске.</span></div><div class="meta-row"><strong>4. Зафиксировать итоги</strong><span>Причины, меры и ответственные.</span></div></section>
+    <section class="meta-card danger-zone"><h2>Удаление записи</h2><p>Действие необратимо. Перед удалением при необходимости экспортируйте журнал.</p><form method="post" action="{{ url_for('main.incident_delete', incident_id=incident.id) }}" data-confirm="Удалить запись об инциденте без возможности восстановления?"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-danger button-small" type="submit">Удалить инцидент</button></form></section>
+  </aside>
+</div>
+{% endblock %}

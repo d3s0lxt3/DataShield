@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block title %}Инциденты — DataShield{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="eyebrow">Реагирование</span><h1>Журнал инцидентов</h1><p>Хронология событий, оценка риска и контроль сроков уведомления. Всего записей: {{ all_count }}.</p></div><div class="page-actions"><a class="button button-secondary" href="{{ url_for('main.incidents_export') }}">{{ icon('download', 17) }} Экспорт CSV</a><a class="button button-primary" href="{{ url_for('main.incident_new') }}">{{ icon('plus', 17) }} Добавить инцидент</a></div></header>
+<form class="filter-bar" method="get" action="{{ url_for('main.incidents') }}">
+  <div class="field filter-search"><label for="q">Поиск</label>{{ icon('search', 17) }}<input class="filter-control" id="q" name="q" value="{{ filters.q }}" placeholder="Название, описание или система"></div>
+  <div class="field"><label for="filter-status">Статус</label><select id="filter-status" name="status"><option value="">Все статусы</option>{% for value, label in incident_status_labels.items() %}<option value="{{ value }}" {{ 'selected' if filters.status == value }}>{{ label }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="filter-risk">Риск</label><select id="filter-risk" name="risk"><option value="">Любой риск</option>{% for value, label in risk_labels.items() %}<option value="{{ value }}" {{ 'selected' if filters.risk == value }}>{{ label }}</option>{% endfor %}</select></div>
+  <button class="button button-secondary" type="submit">Применить</button>{% if filters.q or filters.status or filters.risk %}<a class="button button-secondary" href="{{ url_for('main.incidents') }}">Сбросить</a>{% endif %}
+</form>
+{% if incidents %}
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>Событие</th><th>Обнаружен</th><th>Риск</th><th>Субъектов</th><th>Статус</th><th></th></tr></thead><tbody>
+{% for incident in incidents %}<tr><td class="incident-title-cell"><a class="table-title" href="{{ url_for('main.incident_detail', incident_id=incident.id) }}">{{ incident.title }}</a><small>#{{ incident.id }} · {{ category_labels[incident.category] }}</small></td><td>{{ incident.detected_at|date_ru }}</td><td><span class="risk risk-{{ incident.risk }}">{{ risk_labels[incident.risk] }}</span></td><td>{{ incident.subjects_count }}</td><td>{{ incident_status_labels[incident.status] }}</td><td><a class="text-link" href="{{ url_for('main.incident_detail', incident_id=incident.id) }}">Открыть {{ icon('chevron', 14) }}</a></td></tr>{% endfor %}
+</tbody></table></div></section>
+{% else %}
+<section class="incident-empty empty-state">{{ icon('shield', 40) }}<h3>{{ 'Ничего не найдено' if all_count else 'Инцидентов не зарегистрировано' }}</h3><p>{{ 'Измените условия поиска или сбросьте фильтры.' if all_count else 'При событии создайте карточку: сервис рассчитает ориентировочные сроки уведомления и сохранит историю действий.' }}</p>{% if all_count %}<a class="button button-secondary" href="{{ url_for('main.incidents') }}">Сбросить фильтры</a>{% else %}<a class="button button-primary" href="{{ url_for('main.incident_new') }}">{{ icon('plus', 17) }} Добавить первый инцидент</a>{% endif %}</section>
+{% endif %}
+{% endblock %}

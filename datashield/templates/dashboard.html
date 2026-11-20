@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon, status_badge %}
+{% block title %}Обзор — DataShield{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Центр соответствия</span>
+    <h1>{% if company.name %}{{ company.name }}:<br>данные под контролем{% else %}Персональные данные.<br>Понятный план действий.{% endif %}</h1>
+    <p>Определите применимые требования 152-ФЗ и GDPR, подготовьте документы и контролируйте инциденты в одном месте.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="{{ url_for('main.assessment') }}">{{ 'Продолжить оценку' if scope_answered else 'Начать оценку' }} {{ icon('arrow', 18) }}</a>
+      <a class="button button-secondary" href="{{ url_for('main.documents') }}">Перейти к документам</a>
+    </div>
+  </div>
+  <div class="progress-panel">
+    <span class="progress-label">Общий прогресс</span>
+    <div class="progress-ring">
+      <svg viewBox="0 0 120 120" role="img" aria-label="Выполнено {{ percent }} процентов требований">
+        <circle class="ring-track" cx="60" cy="60" r="52"/>
+        <circle class="ring-value" cx="60" cy="60" r="52" transform="rotate(-90 60 60)" stroke-dasharray="{{ (percent * 3.267)|round(2) }} 326.7"/>
+      </svg>
+      <div><strong>{{ percent }}<sup>%</sup></strong><span>выполнено</span></div>
+    </div>
+    <p>{{ done }} из {{ total }} применимых требований</p>
+    <a href="{{ url_for('main.assessment') }}#requirements">Открыть чек-лист {{ icon('arrow', 16) }}</a>
+  </div>
+</section>
+
+<section class="metrics" aria-label="Ключевые показатели">
+  <article class="metric-card"><span class="metric-icon green">{{ icon('checklist') }}</span><div><strong>{{ done }}</strong><span>требований выполнено</span></div><small>{{ in_progress }} в работе</small></article>
+  <article class="metric-card"><span class="metric-icon blue">{{ icon('document') }}</span><div><strong>5</strong><span>шаблонов документов</span></div><small>в формате DOCX</small></article>
+  <article class="metric-card"><span class="metric-icon amber">{{ icon('incident') }}</span><div><strong>{{ active_incidents }}</strong><span>активных инцидентов</span></div><a href="{{ url_for('main.incidents') }}">Открыть журнал</a></article>
+</section>
+
+<div class="dashboard-grid">
+  <section class="panel next-panel">
+    <div class="panel-heading"><div><span class="eyebrow">Приоритеты</span><h2>Что сделать дальше</h2></div><a class="text-link" href="{{ url_for('main.assessment') }}#requirements">Все требования {{ icon('arrow', 16) }}</a></div>
+    {% if next_steps %}
+      <div class="task-list">
+      {% for item in next_steps %}
+        <a class="task-row" href="{{ url_for('main.assessment') }}#requirement-{{ item.key }}">
+          <span class="priority priority-{{ item.priority }}">{{ 'Высокий' if item.priority == 'high' else 'Средний' if item.priority == 'medium' else 'Базовый' }}</span>
+          <div><strong>{{ item.title }}</strong><span>{{ item.regime }} · {{ item.law }}</span></div>
+          {{ icon('chevron', 18) }}
+        </a>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state compact">{{ icon('check', 30) }}<h3>{{ 'Чек-лист пока пуст' if not total else 'Все требования выполнены' }}</h3><p>{{ 'Заполните анкету, чтобы сервис определил применимые требования.' if not total else 'Проверяйте чек-лист при изменении процессов обработки данных.' }}</p>{% if not total %}<a class="button button-primary" href="{{ url_for('main.assessment') }}">Заполнить анкету</a>{% endif %}</div>
+    {% endif %}
+  </section>
+  <aside class="panel setup-panel">
+    <div class="panel-heading"><div><span class="eyebrow">Настройка</span><h2>Данные для работы</h2></div></div>
+    <a class="setup-item" href="{{ url_for('main.assessment') }}#company">
+      <span class="setup-icon">{{ icon('building') }}</span><div><strong>Профиль компании</strong><span>{{ profile_done }} из {{ profile_total }} ключевых полей</span><progress max="{{ profile_total }}" value="{{ profile_done }}"></progress></div>{{ icon('chevron', 18) }}
+    </a>
+    <a class="setup-item" href="{{ url_for('main.assessment') }}#scope">
+      <span class="setup-icon">{{ icon('checklist') }}</span><div><strong>Анкета обработки</strong><span>{{ scope_answered }} из {{ scope_total }} ответов</span><progress max="{{ scope_total }}" value="{{ scope_answered }}"></progress></div>{{ icon('chevron', 18) }}
+    </a>
+    <div class="setup-hint">{{ icon('info', 18) }}<p>Ответ «Не знаю» не считается выполнением: требование останется в плане.</p></div>
+  </aside>
+</div>
+
+<section class="workflow-section">
+  <div class="section-heading"><span class="eyebrow">Единый процесс</span><h2>От анкеты до контроля</h2></div>
+  <div class="workflow">
+    <a href="{{ url_for('main.assessment') }}#company"><span>01</span><strong>Опишите компанию</strong><small>Цели, категории и сроки</small></a>
+    <a href="{{ url_for('main.assessment') }}#scope"><span>02</span><strong>Пройдите чек-лист</strong><small>Только применимые нормы</small></a>
+    <a href="{{ url_for('main.documents') }}"><span>03</span><strong>Скачайте документы</strong><small>Редактируемые файлы DOCX</small></a>
+    <a href="{{ url_for('main.incidents') }}"><span>04</span><strong>Ведите журнал</strong><small>Сроки и история реагирования</small></a>
+  </div>
+</section>
+
+<section class="panel recent-panel">
+  <div class="panel-heading"><div><span class="eyebrow">Реагирование</span><h2>Последние инциденты</h2></div><a class="text-link" href="{{ url_for('main.incidents') }}">Журнал инцидентов {{ icon('arrow', 16) }}</a></div>
+  {% if recent_incidents %}
+    <div class="table-wrap"><table><thead><tr><th>Событие</th><th>Обнаружен</th><th>Риск</th><th>Статус</th></tr></thead><tbody>
+    {% for incident in recent_incidents %}<tr><td><a class="table-title" href="{{ url_for('main.incident_detail', incident_id=incident.id) }}">{{ incident.title }}</a><small>{{ category_labels[incident.category] }}</small></td><td>{{ incident.detected_at|date_ru }}</td><td><span class="risk risk-{{ incident.risk }}">{{ risk_labels[incident.risk] }}</span></td><td>{{ incident_status_labels[incident.status] }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  {% else %}
+    <div class="inline-empty"><span>{{ icon('shield', 24) }}</span><div><strong>Журнал готов к работе</strong><p>Регистрируйте события, чтобы сохранять хронологию и контролировать сроки уведомлений.</p></div><a class="button button-secondary" href="{{ url_for('main.incident_new') }}">{{ icon('plus', 17) }} Добавить инцидент</a></div>
+  {% endif %}
+</section>
+{% endblock %}
